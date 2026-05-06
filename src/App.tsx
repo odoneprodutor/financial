@@ -34,7 +34,10 @@ import {
   Bar, 
   XAxis, 
   YAxis, 
-  Tooltip 
+  Tooltip,
+  LineChart,
+  Line,
+  CartesianGrid
 } from 'recharts';
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
@@ -1133,6 +1136,20 @@ function Dashboard({
                   </p>
                </div>
             </div>
+
+            {/* Debt Evolution Chart */}
+            {data.debts.length > 0 && (
+              <div className="mt-12">
+                <p className="text-[10px] uppercase tracking-[0.2em] opacity-40 mb-6 border-b border-white/5 pb-2">Projeção de Quitação (Evolução de Saldo Devedor)</p>
+                <div className="h-[250px] w-full">
+                  <DebtEvolutionChart debts={data.debts} monthlyAport={saldo > 0 ? saldo : 0} />
+                </div>
+                <div className="mt-4 flex justify-between items-center text-[10px] uppercase tracking-widest opacity-30">
+                  <span>Hoje</span>
+                  <span>Projeção 12 Meses</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* AI Insights & Chat Section */}
@@ -1287,5 +1304,87 @@ function Dashboard({
         </div>
       </div>
     </motion.div>
+  );
+}
+
+function DebtEvolutionChart({ debts, monthlyAport }: { debts: Debt[], monthlyAport: number }) {
+  // Simple simulation for 12 months
+  const months = ['Mês 1', 'Mês 2', 'Mês 3', 'Mês 4', 'Mês 5', 'Mês 6', 'Mês 7', 'Mês 8', 'Mês 9', 'Mês 10', 'Mês 11', 'Mês 12'];
+  
+  const generateData = () => {
+    let currentDebts = debts.map(d => ({ ...d }));
+    const data = [];
+    
+    // Initial state
+    const initialTotal = currentDebts.reduce((sum, d) => sum + d.totalAmount, 0);
+    data.push({ name: 'Hoje', saldo: initialTotal });
+
+    for (let i = 0; i < 12; i++) {
+      let extraMoney = monthlyAport;
+      
+      // 1. Pay minimums and apply interest
+      currentDebts = currentDebts.map(d => {
+        let amount = d.totalAmount;
+        // Apply interest
+        amount = amount * (1 + (d.interestRate / 100));
+        // Pay minimum monthly payment
+        const payment = Math.min(amount, d.monthlyPayment);
+        amount -= payment;
+        return { ...d, totalAmount: amount };
+      });
+
+      // 2. Apply extra aport (Snowball) to the first debt
+      for (let j = 0; j < currentDebts.length; j++) {
+        if (currentDebts[j].totalAmount > 0 && extraMoney > 0) {
+          const payment = Math.min(currentDebts[j].totalAmount, extraMoney);
+          currentDebts[j].totalAmount -= payment;
+          extraMoney -= payment;
+        }
+      }
+
+      const totalRemaining = currentDebts.reduce((sum, d) => sum + d.totalAmount, 0);
+      data.push({ name: months[i], saldo: Math.round(totalRemaining) });
+    }
+    
+    return data;
+  };
+
+  const chartData = generateData();
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+        <XAxis 
+          dataKey="name" 
+          hide 
+        />
+        <YAxis 
+          hide 
+          domain={[0, 'auto']}
+        />
+        <Tooltip 
+          contentStyle={{ 
+            backgroundColor: '#0d0d0d', 
+            border: '1px solid rgba(255,255,255,0.1)', 
+            borderRadius: '4px',
+            fontSize: '10px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em'
+          }}
+          formatter={(value: number) => [formatCurrency(value), 'Saldo Devedor']}
+          itemStyle={{ color: '#f87171' }}
+        />
+        <Line 
+          type="monotone" 
+          dataKey="saldo" 
+          stroke="#f87171" 
+          strokeWidth={2} 
+          dot={{ r: 2, fill: '#f87171', strokeWidth: 0 }}
+          activeDot={{ r: 4, strokeWidth: 0 }}
+          animationDuration={2000}
+        />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }
