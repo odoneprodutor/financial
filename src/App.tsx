@@ -25,6 +25,7 @@ import { FinancialData, Expense, Debt } from './types';
 import { formatCurrency, cn } from './lib/utils';
 import { getFinancialAdvice } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { 
   PieChart, 
   Pie, 
@@ -1189,7 +1190,7 @@ function Dashboard({
                      </div>
                    ) : (
                      <div className="markdown-body text-[#e5e5e5] selection:bg-white selection:text-black">
-                       <ReactMarkdown>{advice}</ReactMarkdown>
+                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{advice}</ReactMarkdown>
                      </div>
                    )}
                  </div>
@@ -1214,7 +1215,7 @@ function Dashboard({
                                 : "bg-white/5 border border-white/10 text-white/90"
                             )}>
                                <div className="markdown-body prose-sm prose-invert">
-                                 <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                                </div>
                             </div>
                          </div>
