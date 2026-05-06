@@ -19,9 +19,17 @@ export interface Debt {
   interestRate: number; // monthly interest rate in percentage
 }
 
-export interface FinancialData {
-  monthlyIncome: number;
+export interface MonthlyData {
+  month: number; // 0-11
+  year: number;
+  income: number;
   expenses: Expense[];
+}
+
+export interface FinancialData {
+  monthlyIncome: number; // Current/Default income
+  expenses: Expense[]; // Default/Base expenses
+  history: MonthlyData[]; // Historical monthly logs
   debts: Debt[];
   savings: number; // Total liquid savings
   reserves: Reserve[]; // Specific savings buckets

@@ -67,8 +67,18 @@
 }
 
 .glass-effect {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 15, 15, 0.4) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.glass-active {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(25px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(25px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8) !important;
 }
 
 .border-subtle {
@@ -79,3 +89,4 @@
   background-color: #0d0d0d;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
+

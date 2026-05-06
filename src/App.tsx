@@ -11,15 +11,21 @@ import {
   CreditCard, 
   PiggyBank, 
   Target, 
+  BrainCircuit,
+  LogOut,
+  Send,
+  MessageSquare,
+  ShieldCheck,
+  Zap,
+  ChevronDown,
   ChevronRight,
   ArrowRight,
   RefreshCw,
   Plus,
   Trash2,
-  BrainCircuit,
-  LogOut,
-  Send,
-  MessageSquare
+  Table,
+  Calendar,
+  LayoutDashboard
 } from 'lucide-react';
 import { FinancialData, Expense, Debt } from './types';
 import { formatCurrency, cn } from './lib/utils';
@@ -54,6 +60,7 @@ export default function App() {
   const [isEditing, setIsEditing] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [newName, setNewName] = useState('');
+  const [payoffMethod, setPayoffMethod] = useState<'snowball' | 'avalanche'>('snowball');
 
   useEffect(() => {
     if (showAccountModal && session?.user) {
@@ -299,6 +306,8 @@ export default function App() {
               isEditing={isEditing}
               onRefresh={handleRefreshAdvice}
               onUpdateData={handleUpdateData}
+              payoffMethod={payoffMethod}
+              setPayoffMethod={setPayoffMethod}
             />
           )}
         </AnimatePresence>
@@ -618,7 +627,9 @@ function Dashboard({
   loading, 
   isEditing,
   onRefresh,
-  onUpdateData
+  onUpdateData,
+  payoffMethod,
+  setPayoffMethod
 }: { 
   data: FinancialData; 
   advice: string; 
@@ -626,8 +637,12 @@ function Dashboard({
   isEditing: boolean;
   onRefresh: () => void;
   onUpdateData: (newData: FinancialData) => void;
+  payoffMethod: 'snowball' | 'avalanche';
+  setPayoffMethod: (method: 'snowball' | 'avalanche') => void;
 }) {
-  const [activeTab, setActiveTab] = useState<'report' | 'chat'>('report');
+  const [activeTab, setActiveTab] = useState<'report' | 'chat' | 'spreadsheet'>('report');
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'model', content: string }[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -1101,7 +1116,7 @@ function Dashboard({
         {/* Right Section: Strategy & Advice */}
         <div className="lg:col-span-7 flex flex-col">
           {/* Debt Strategy Section */}
-          <div className="p-10 border-b border-white/10 bg-[#080808]">
+          <div className="p-10 border-b border-white/10 glass-effect">
             <div className="flex justify-between items-center mb-10">
               <h3 className="text-xs uppercase tracking-[0.3em] opacity-40">Estratégia de Passivos</h3>
               <button 
@@ -1141,13 +1156,100 @@ function Dashboard({
             {/* Debt Evolution Chart */}
             {data.debts.length > 0 && (
               <div className="mt-12">
-                <p className="text-[10px] uppercase tracking-[0.2em] opacity-40 mb-6 border-b border-white/5 pb-2">Projeção de Quitação (Evolução de Saldo Devedor)</p>
+                <div className="flex justify-between items-end mb-6 border-b border-white/5 pb-2">
+                  <p className="text-[10px] uppercase tracking-[0.2em] opacity-40">Projeção de Quitação</p>
+                  <div className="flex gap-4">
+                    <button 
+                      onClick={() => setPayoffMethod('avalanche')}
+                      className={cn(
+                        "text-[8px] uppercase tracking-widest flex items-center gap-1 transition-all",
+                        payoffMethod === 'avalanche' ? "opacity-100 border-b border-white" : "opacity-40 hover:opacity-100"
+                      )}
+                    >
+                      <Zap className="w-2 h-2 text-yellow-400" /> Avalanche
+                    </button>
+                    <button 
+                      onClick={() => setPayoffMethod('snowball')}
+                      className={cn(
+                        "text-[8px] uppercase tracking-widest flex items-center gap-1 transition-all",
+                        payoffMethod === 'snowball' ? "opacity-100 border-b border-white" : "opacity-40 hover:opacity-100"
+                      )}
+                    >
+                      Bola de Neve
+                    </button>
+                  </div>
+                </div>
                 <div className="h-[250px] w-full">
-                  <DebtEvolutionChart debts={data.debts} monthlyAport={saldo > 0 ? saldo : 0} />
+                  <DebtEvolutionChart debts={data.debts} monthlyAport={saldo > 0 ? saldo : 0} method={payoffMethod} />
                 </div>
                 <div className="mt-4 flex justify-between items-center text-[10px] uppercase tracking-widest opacity-30">
                   <span>Hoje</span>
                   <span>Projeção 12 Meses</span>
+                </div>
+              </div>
+            )}
+
+            {/* Strategy Comparison Cards */}
+            {data.debts.length > 1 && (
+              <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div 
+                  onClick={() => setPayoffMethod('avalanche')}
+                  className={cn(
+                    "p-6 rounded-sm transition-all cursor-pointer group relative overflow-hidden",
+                    payoffMethod === 'avalanche' 
+                      ? "glass-active shadow-[0_0_40px_rgba(255,255,255,0.05)] scale-[1.02]" 
+                      : "glass-effect hover:bg-white/5"
+                  )}
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className={cn(
+                      "p-2 rounded-full transition-colors",
+                      payoffMethod === 'avalanche' ? "bg-white text-black" : "bg-white/5 text-yellow-400"
+                    )}>
+                      <Zap className="w-4 h-4" />
+                    </div>
+                    {payoffMethod === 'avalanche' && (
+                      <span className="text-[8px] uppercase tracking-widest text-black font-bold bg-white px-2 py-0.5 rounded-full">Ativo</span>
+                    )}
+                  </div>
+                  <h4 className="text-sm font-bold uppercase tracking-wider mb-1">Método Avalanche</h4>
+                  <p className="text-[10px] opacity-40 mb-4">Foco total no maior juro ({Math.max(...data.debts.map(d => d.interestRate))}% am)</p>
+                  <div className="flex items-center justify-between mt-6">
+                    <span className="text-xs font-serif italic text-[#10b981]">Máxima Economia</span>
+                    {payoffMethod !== 'avalanche' && (
+                      <button className="text-[10px] uppercase font-bold tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">Escolher Plano</button>
+                    )}
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => setPayoffMethod('snowball')}
+                  className={cn(
+                    "p-6 rounded-sm transition-all cursor-pointer group relative overflow-hidden",
+                    payoffMethod === 'snowball' 
+                      ? "glass-active shadow-[0_0_40px_rgba(255,255,255,0.05)] scale-[1.02]" 
+                      : "glass-effect hover:bg-white/5"
+                  )}
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className={cn(
+                      "p-2 rounded-full transition-colors",
+                      payoffMethod === 'snowball' ? "bg-white text-black" : "bg-white/5 text-white"
+                    )}>
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    {payoffMethod === 'snowball' && (
+                      <span className="text-[8px] uppercase tracking-widest text-black font-bold bg-white px-2 py-0.5 rounded-full">Ativo</span>
+                    )}
+                  </div>
+                  <h4 className="text-sm font-bold uppercase tracking-wider mb-1">Bola de Neve</h4>
+                  <p className="text-[10px] opacity-40 mb-4">Foco psicológico: menor saldo primeiro</p>
+                  <div className="flex items-center justify-between mt-6">
+                    <span className="text-xs font-serif italic opacity-80">Vitórias Rápidas</span>
+                    {payoffMethod !== 'snowball' && (
+                      <button className="text-[10px] uppercase font-bold tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">Escolher Plano</button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -1167,6 +1269,17 @@ function Dashboard({
                   {activeTab === 'report' && <motion.div layoutId="tab-active" className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />}
                 </button>
                 <button 
+                  onClick={() => setActiveTab('spreadsheet')}
+                  className={cn(
+                    "text-xs uppercase tracking-[0.3em] pb-4 transition-all relative flex items-center gap-2",
+                    activeTab === 'spreadsheet' ? "opacity-100 font-bold" : "opacity-30 hover:opacity-100"
+                  )}
+                >
+                  <Table className="w-3 h-3" />
+                  Planilha
+                  {activeTab === 'spreadsheet' && <motion.div layoutId="tab-active" className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />}
+                </button>
+                <button 
                   onClick={() => setActiveTab('chat')}
                   className={cn(
                     "text-xs uppercase tracking-[0.3em] pb-4 transition-all relative flex items-center gap-2",
@@ -1180,7 +1293,7 @@ function Dashboard({
              </div>
              
              <div className="flex-grow flex flex-col overflow-hidden">
-               {activeTab === 'report' ? (
+               {activeTab === 'report' && (
                  <div className="overflow-y-auto pr-4 custom-scrollbar">
                    {loading ? (
                      <div className="space-y-6 animate-pulse">
@@ -1194,7 +1307,136 @@ function Dashboard({
                      </div>
                    )}
                  </div>
-               ) : (
+               )}
+
+               {activeTab === 'spreadsheet' && (
+                 <div className="overflow-y-auto pr-4 custom-scrollbar flex flex-col h-full">
+                   <div className="flex justify-between items-center mb-8">
+                     <p className="text-[10px] uppercase tracking-widest opacity-40">Lançamento de Fluxo Real</p>
+                     <div className="flex gap-2">
+                       <select value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))} className="bg-white/5 border border-white/10 text-[10px] uppercase p-2 focus:outline-none">
+                         {['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].map((m,i) => (
+                           <option key={m} value={i} className="bg-black text-white">{m}</option>
+                         ))}
+                       </select>
+                       <select value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))} className="bg-white/5 border border-white/10 text-[10px] uppercase p-2 focus:outline-none">
+                         {[2024, 2025, 2026].map(y => (
+                           <option key={y} value={y} className="bg-black text-white">{y}</option>
+                         ))}
+                       </select>
+                     </div>
+                   </div>
+                   <div className="glass-effect p-8 rounded-sm mb-10">
+                     <div className="mb-10">
+                       <label className="text-[8px] uppercase tracking-widest opacity-30 mb-2 block">Renda Real Recebida</label>
+                       <input type="number"
+                         value={data.history?.find(h => h.month === selectedMonth && h.year === selectedYear)?.income ?? data.monthlyIncome}
+                         onChange={(e) => {
+                           const val = Number(e.target.value);
+                           const history = [...(data.history || [])];
+                           const idx = history.findIndex(h => h.month === selectedMonth && h.year === selectedYear);
+                           if (idx !== -1) { history[idx].income = val; }
+                           else { history.push({ month: selectedMonth, year: selectedYear, income: val, expenses: JSON.parse(JSON.stringify(data.expenses)) }); }
+                           onUpdateData({ ...data, history });
+                         }}
+                         className="bg-transparent text-4xl font-light tracking-tighter text-white focus:outline-none w-full"
+                       />
+                     </div>
+                     <div className="space-y-4">
+                       <p className="text-[10px] uppercase tracking-widest opacity-30 border-b border-white/5 pb-2 mb-6">Detalhamento de Saídas Reais</p>
+                       {(data.history?.find(h => h.month === selectedMonth && h.year === selectedYear)?.expenses || data.expenses).map((exp, idx) => (
+                         <div key={exp.id} className="flex justify-between items-center">
+                           <span className="text-xs opacity-60">{exp.category}</span>
+                           <div className="flex items-center gap-4">
+                             <input type="number" value={exp.amount}
+                               onChange={(e) => {
+                                 const val = Number(e.target.value);
+                                 const history = [...(data.history || [])];
+                                 let md = history.find(h => h.month === selectedMonth && h.year === selectedYear);
+                                 if (!md) { md = { month: selectedMonth, year: selectedYear, income: data.monthlyIncome, expenses: JSON.parse(JSON.stringify(data.expenses)) }; history.push(md); }
+                                 md.expenses[idx].amount = val;
+                                 onUpdateData({ ...data, history });
+                               }}
+                               className="bg-transparent text-right font-medium text-sm focus:outline-none border-b border-white/5 focus:border-white/20 w-24 py-1"
+                             />
+                             <span className="text-[8px] opacity-20 uppercase">BRL</span>
+                           </div>
+                         </div>
+                       ))}
+
+                       {/* Pontual expenses section */}
+                       {(() => {
+                         const monthEntry = data.history?.find(h => h.month === selectedMonth && h.year === selectedYear);
+                         const pontualExpenses = monthEntry?.expenses.filter(e => e.type === 'pontual' && !data.expenses.find(b => b.id === e.id)) || [];
+                         return pontualExpenses.length > 0 ? (
+                           <div className="mt-6 pt-4 border-t border-white/5">
+                             <p className="text-[8px] uppercase tracking-widest opacity-20 mb-3">Gastos Pontuais deste Mês</p>
+                             {pontualExpenses.map((exp, i) => (
+                               <div key={exp.id} className="flex justify-between items-center mb-2 group">
+                                 <span className="text-xs opacity-50 italic">{exp.category}</span>
+                                 <div className="flex items-center gap-3">
+                                   <span className="text-sm font-medium opacity-70">R$ {exp.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                   <button
+                                     onClick={() => {
+                                       const history = [...(data.history || [])];
+                                       const md = history.find(h => h.month === selectedMonth && h.year === selectedYear);
+                                       if (md) { md.expenses = md.expenses.filter(e => e.id !== exp.id); onUpdateData({ ...data, history }); }
+                                     }}
+                                     className="text-[8px] opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-opacity text-red-400 uppercase tracking-widest"
+                                   >remover</button>
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         ) : null;
+                       })()}
+
+                       {/* Add pontual expense form */}
+                       <div className="mt-8 pt-6 border-t border-white/5">
+                         <p className="text-[8px] uppercase tracking-widest opacity-20 mb-4">+ Adicionar Gasto Pontual</p>
+                         <div className="flex gap-3 items-center">
+                           <input
+                             id="new-expense-category"
+                             type="text"
+                             placeholder="Descrição"
+                             className="bg-transparent text-xs border-b border-white/10 focus:border-white/30 focus:outline-none flex-1 py-1 placeholder-white/20"
+                           />
+                           <input
+                             id="new-expense-amount"
+                             type="number"
+                             placeholder="0"
+                             className="bg-transparent text-xs border-b border-white/10 focus:border-white/30 focus:outline-none w-24 py-1 text-right placeholder-white/20"
+                           />
+                           <button
+                             onClick={() => {
+                               const catInput = document.getElementById('new-expense-category') as HTMLInputElement;
+                               const amtInput = document.getElementById('new-expense-amount') as HTMLInputElement;
+                               const category = catInput?.value.trim();
+                               const amount = Number(amtInput?.value);
+                               if (!category || !amount) return;
+                               const history = [...(data.history || [])];
+                               let md = history.find(h => h.month === selectedMonth && h.year === selectedYear);
+                               if (!md) {
+                                 md = { month: selectedMonth, year: selectedYear, income: data.monthlyIncome, expenses: JSON.parse(JSON.stringify(data.expenses)) };
+                                 history.push(md);
+                               }
+                               md.expenses.push({ id: `pontual-${Date.now()}`, category, amount, type: 'pontual' });
+                               onUpdateData({ ...data, history });
+                               catInput.value = '';
+                               amtInput.value = '';
+                             }}
+                             className="text-[9px] uppercase tracking-widest border border-white/10 hover:border-white/30 px-3 py-1 transition-colors whitespace-nowrap"
+                           >
+                             Lançar
+                           </button>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               )}
+
+               {activeTab === 'chat' && (
                  <div className="flex flex-col h-full">
                      <div className="overflow-y-auto pr-4 custom-scrollbar">
                        {chatMessages.length === 0 && (
@@ -1308,7 +1550,7 @@ function Dashboard({
   );
 }
 
-function DebtEvolutionChart({ debts, monthlyAport }: { debts: Debt[], monthlyAport: number }) {
+function DebtEvolutionChart({ debts, monthlyAport, method }: { debts: Debt[], monthlyAport: number, method: 'snowball' | 'avalanche' }) {
   // Simple simulation for 12 months
   const months = ['Mês 1', 'Mês 2', 'Mês 3', 'Mês 4', 'Mês 5', 'Mês 6', 'Mês 7', 'Mês 8', 'Mês 9', 'Mês 10', 'Mês 11', 'Mês 12'];
   
@@ -1334,14 +1576,29 @@ function DebtEvolutionChart({ debts, monthlyAport }: { debts: Debt[], monthlyApo
         return { ...d, totalAmount: amount };
       });
 
-      // 2. Apply extra aport (Snowball) to the first debt
-      for (let j = 0; j < currentDebts.length; j++) {
-        if (currentDebts[j].totalAmount > 0 && extraMoney > 0) {
-          const payment = Math.min(currentDebts[j].totalAmount, extraMoney);
-          currentDebts[j].totalAmount -= payment;
+      // 2. Sort debts based on method
+      const sortedDebts = [...currentDebts].sort((a, b) => {
+        if (method === 'snowball') {
+          return a.totalAmount - b.totalAmount; // Smallest balance first
+        } else {
+          return b.interestRate - a.interestRate; // Highest interest rate first
+        }
+      });
+
+      // 3. Apply extra aport
+      for (let j = 0; j < sortedDebts.length; j++) {
+        if (sortedDebts[j].totalAmount > 0 && extraMoney > 0) {
+          const payment = Math.min(sortedDebts[j].totalAmount, extraMoney);
+          sortedDebts[j].totalAmount -= payment;
           extraMoney -= payment;
         }
       }
+
+      // Update original currentDebts with values from sortedDebts
+      sortedDebts.forEach(sd => {
+        const idx = currentDebts.findIndex(cd => cd.id === sd.id);
+        if (idx !== -1) currentDebts[idx].totalAmount = sd.totalAmount;
+      });
 
       const totalRemaining = currentDebts.reduce((sum, d) => sum + d.totalAmount, 0);
       data.push({ name: months[i], saldo: Math.round(totalRemaining) });

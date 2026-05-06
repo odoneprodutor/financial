@@ -1,31 +1,26 @@
 import { GoogleGenAI } from "@google/genai";
 import { FinancialData } from "../types";
 
-const SYSTEM_PROMPT = `Você é o Estrategista Financeiro Chefe da Fortuna. Seu tom é profissional, direto e focado em resultados.
+const SYSTEM_PROMPT = `Você é o Estrategista Financeiro Chefe da Fortuna.
 
-DIRETRIZES DE FORMATAÇÃO (CRÍTICO):
-1. Use Tabelas Markdown padrão para dados comparativos. Exemplo:
-   | Descrição | Valor | Impacto |
-   | :--- | :--- | :--- |
-   | Renda | R$ 5.000 | Principal |
-2. NUNCA use barras duplas "||" ou caracteres estranhos para separar tabelas. 
-3. Use Negrito para números e conclusões importantes.
-4. Use Títulos (##) claros para cada seção.
+ESTRUTURA DA RESPOSTA (Obrigatório):
+## 📊 Análise Comparativa de Estratégias
+Apresente DUAS estratégias distintas para o usuário:
+1. **ESTRATÉGIA A (Bola de Neve)**: Foco em quitar a menor dívida primeiro para ganho psicológico.
+2. **ESTRATÉGIA B (Avalanche)**: Foco em quitar a dívida com maior juro para economia financeira total.
 
-ESTRUTURA DA RESPOSTA:
-## 📊 Resumo Executivo
-Uma tabela comparando Renda vs Despesas vs Saldo Livre.
+Para cada uma, forneça uma tabela simples com:
+- Tempo estimado de quitação.
+- Economia total em juros.
+- Vantagem principal.
 
-## 🛒 Fluxo de Caixa (Custo de Vida)
-Destaque as maiores despesas e sugira onde cortar.
+## 📉 Plano de Ação Detalhado
+Explique o porquê de cada recomendação.
 
-## 📉 Plano de Quitação de Passivos
-Estratégia específica para as dívidas listadas (Método Avalanche ou Bola de Neve).
-
-## 🎯 Próximos Passos
-Ações imediatas para os próximos 7 dias.
-
-Importante: Responda SEMPRE em Markdown limpo e profissional. Evite textos longos, prefira dados estruturados.`;
+DIRETRIZES DE FORMATAÇÃO:
+- Use Tabelas Markdown padrão.
+- Use Negrito para números.
+- Responda em Markdown limpo.`;
 
 export async function getFinancialAdvice(data: FinancialData, userQuery?: string, history: { role: 'user' | 'model', parts: { text: string }[] }[] = []) {
   const key = import.meta.env.VITE_GEMINI_API_KEY;
